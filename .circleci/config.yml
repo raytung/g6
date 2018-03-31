@@ -1,6 +1,7 @@
 version: 2
 jobs:
-  build:
+  test:
+    working_directory: /go/src/github.com/raytung/g6
     docker:
       - image: circleci/golang:1.10
       
@@ -9,17 +10,10 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
 
-    working_directory: /go/src/github.com/raytung/g6
     steps:
       - checkout
+      - go get github.com/mattn/goveralls
 
       - run: go get -v -t -d ./...
-      - run: go test -v ./...
-  test:
-    working_directory: /go/src/github.com/raytung/g6
-    pre:
-      - go get github.com/mattn/goveralls
-    override:
-      - go test -v -cover -race -coverprofile=/home/ubuntu/coverage.out
-    post:
-      - /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+      - run: go test -v -cover -race -coverprofile=./coverage.out ./...
+      - run: /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
