@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - checkout
-      - go get github.com/mattn/goveralls
+      - run: go get github.com/mattn/goveralls
       - run: go get -v -t -d ./...
   test:
     working_directory: /go/src/github.com/raytung/g6
