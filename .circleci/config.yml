@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  test:
+  build:
     working_directory: /go/src/github.com/raytung/g6
     docker:
       - image: circleci/golang:1.10
@@ -13,7 +13,11 @@ jobs:
     steps:
       - checkout
       - go get github.com/mattn/goveralls
-
       - run: go get -v -t -d ./...
+  test:
+    working_directory: /go/src/github.com/raytung/g6
+    docker:
+      - image: circleci/golang:1.10
+    steps:
       - run: go test -v -cover -race -coverprofile=./coverage.out ./...
       - run: /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
