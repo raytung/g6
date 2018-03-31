@@ -12,7 +12,6 @@ jobs:
 
     steps:
       - checkout
-      - run: go get github.com/mattn/goveralls
       - run: go get -v -t -d ./...
   test:
     working_directory: /go/src/github.com/raytung/g6
@@ -21,6 +20,7 @@ jobs:
     steps:
       - checkout
       - run: go test -v -cover -race -coverprofile=./coverage.out ./...
+      - run: go get github.com/mattn/goveralls
       - run: /home/ubuntu/.go_workspace/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
 
 workflows:
