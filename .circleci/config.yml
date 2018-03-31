@@ -13,6 +13,7 @@ jobs:
     steps:
       - checkout
       - run: go get -v -t -d ./...
+      - run: go build
   test:
     working_directory: /go/src/github.com/raytung/g6
     docker:
@@ -28,4 +29,6 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - test
+      - test:
+          requires:
+            - build
