@@ -21,7 +21,7 @@ jobs:
       - checkout
       - run: go test -v -cover -race -coverprofile=./coverage.out ./...
       - run: go get -u github.com/mattn/goveralls
-      - run: $(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=/home/ubuntu/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+      - run: $(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=./coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
 
 workflows:
   version: 2
