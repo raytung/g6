@@ -1,4 +1,4 @@
-package cmd
+package g6
 
 import (
 	"github.com/spf13/cobra"
