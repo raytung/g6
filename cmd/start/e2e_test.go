@@ -63,4 +63,5 @@ func TestG6(t *testing.T) {
 
 func tearDown(path string) {
 	exec.Command("rm", path).Run()
+	os.RemoveAll("migrations")
 }
