@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 )
 
 const testBinaryForGenerate = "g6_gen__test"
@@ -43,13 +42,18 @@ func TestE2EGenerate(t *testing.T) {
 			expectedFilesGlob: filepath.Join(tmpDir, "new_migrations", "V*__create_blogs_table.*.sql"),
 			cmd:               []string{"generate", "create_blogs_table", "-d", filepath.Join(tmpDir, "new_migrations")},
 		},
+
+		{
+			name:              "short command",
+			expectedFilesGlob: filepath.Join("migrations", "V*__create_blogs_table.*.sql"),
+			cmd:               []string{"g", "create_blogs_table"},
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			out, err := exec.Command(binaryPath, testCase.cmd...).Output()
 
-			fmt.Println(string(out))
-			assert.NoError(t, err)
+			assert.NoError(t, err, string(out))
 
 			files, err := filepath.Glob(testCase.expectedFilesGlob)
 			assert.NoError(t, err)
