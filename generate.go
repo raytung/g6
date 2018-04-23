@@ -1,7 +1,6 @@
 package g6
 
 import (
-	"os"
 	"time"
 	"github.com/spf13/cobra"
 	"fmt"
@@ -17,7 +16,7 @@ func NewGenerate(file services.File, path services.FilePath, time2 services.Time
 	return func(cmd *cobra.Command, args []string) error {
 		err := file.Mkdir("migrations")
 		if err != nil {
-			if !os.IsExist(err) {
+			if !file.IsExist(err) {
 				return err
 			}
 		}
