@@ -9,14 +9,19 @@ function echo_help() {
   echo "where <command> is:"
   echo "cover                         Code coverage"
   echo "test                          Run full test suite"
+  echo "test:unit                     Run unit tests only"
+  echo "test:e2e                      Run e2e tests only"
 }
 
 case "$1" in
   test)
     go test ./... -v -race
     ;;
-  test:short)
+  test:unit)
     go test ./... -v -race -short
+  ;;
+  test:e2e)
+    go test ./... -v -race -run E2E
   ;;
   cover)
     go test -coverprofile cover.out ./...
