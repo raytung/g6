@@ -5,38 +5,38 @@ import (
 
 	"github.com/spf13/cobra"
 	"os"
-	"time"
 	"github.com/stretchr/testify/assert"
 	"errors"
+	"path/filepath"
 )
 
 func TestNewGenerate(t *testing.T) {
 	type svcs struct {
-		file  *fileSvcMock
-		path  *filePathSvcMock
-		time2 *timeSvcMock
+		file    *fileSvcMock
+		version *versionSvcMock
 	}
 	tests := []struct {
-		name          string
-		services      svcs
-		wantErr       bool
-		want          GenerateService
-		cmd           *cobra.Command
-		cmdArgs       []string
-		expectedError error
+		name               string
+		services           svcs
+		wantErr            bool
+		want               GenerateService
+		cmd                *cobra.Command
+		cmdArgs            []string
+		expectedError      error
+		expectedCreateFile string
 	}{
 		{
 			name: "happy path",
 			services: svcs{
 				file: &fileSvcMock{},
-				path: &filePathSvcMock{
-					path: "migrations/V1234__create_users_table",
+				version: &versionSvcMock{
+					gen: "0001",
 				},
-				time2: &timeSvcMock{},
 			},
-			wantErr: false,
-			cmd:     nil,
-			cmdArgs: []string{"create_users_table"},
+			wantErr:            false,
+			cmd:                nil,
+			cmdArgs:            []string{"create_users_table"},
+			expectedCreateFile: filepath.Join("migrations", "V0001__create_users_table"),
 		},
 
 		{
@@ -46,14 +46,12 @@ func TestNewGenerate(t *testing.T) {
 					isExist:  true,
 					mkdirErr: errors.New("some error"),
 				},
-				path: &filePathSvcMock{
-					path: "migrations/V1234__create_users_table",
-				},
-				time2: &timeSvcMock{},
+				version: &versionSvcMock{"0002"},
 			},
-			wantErr: false,
-			cmd:     nil,
-			cmdArgs: []string{"create_users_table"},
+			wantErr:            false,
+			cmd:                nil,
+			cmdArgs:            []string{"create_users_table"},
+			expectedCreateFile: filepath.Join("migrations", "V0002__create_users_table"),
 		},
 
 		{
@@ -63,10 +61,7 @@ func TestNewGenerate(t *testing.T) {
 					isExist:  false,
 					mkdirErr: errors.New("some error"),
 				},
-				path: &filePathSvcMock{
-					path: "migrations/V1234__create_users_table",
-				},
-				time2: &timeSvcMock{},
+				version: &versionSvcMock{},
 			},
 			wantErr:       true,
 			cmd:           nil,
@@ -81,27 +76,25 @@ func TestNewGenerate(t *testing.T) {
 					mkdirErr:  nil,
 					createErr: errors.New("some error"),
 				},
-				path: &filePathSvcMock{
-					path: "migrations/V1234__create_users_table",
-				},
-				time2: &timeSvcMock{},
+				version: &versionSvcMock{},
 			},
-			wantErr: true,
-			cmd:     nil,
-			cmdArgs: []string{"create_users_table"},
+			wantErr:       true,
+			cmd:           nil,
+			cmdArgs:       []string{"create_users_table"},
 			expectedError: errors.New("some error"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gen := NewGenerate(tt.services.file, tt.services.path, tt.services.time2)
+			gen := NewGenerate(tt.services.file, tt.services.version)
 			err := gen(tt.cmd, tt.cmdArgs)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Equal(t, err, tt.expectedError)
 			} else {
 				assert.NoError(t, err)
-				assert.Contains(t, tt.services.file.calledCreateArgs, "migrations/V1234__create_users_table.up.sql")
+				assert.Contains(t, tt.services.file.calledCreateArgs, tt.expectedCreateFile+".up.sql")
+				assert.Contains(t, tt.services.file.calledCreateArgs, tt.expectedCreateFile+".down.sql")
 			}
 		})
 	}
@@ -129,18 +122,10 @@ func (f *fileSvcMock) IsExist(err error) bool {
 	return f.isExist
 }
 
-type filePathSvcMock struct {
-	path string
+type versionSvcMock struct {
+	gen string
 }
 
-func (f *filePathSvcMock) Join(paths ...string) string {
-	return f.path
-}
-
-type timeSvcMock struct {
-	now time.Time
-}
-
-func (t *timeSvcMock) TimeNow() time.Time {
-	return t.now
+func (t *versionSvcMock) Generate() string {
+	return t.gen
 }

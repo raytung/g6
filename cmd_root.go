@@ -18,10 +18,9 @@ func NewRoot() *cobra.Command {
 }
 
 func Execute() {
-	filePathService := services.NewFilePathService()
 	fileService := services.NewFileService()
 	timeService := services.NewTimeService()
-	generateService := NewGenerate(fileService, filePathService, timeService)
+	generateService := NewGenerate(fileService, timeService)
 	generateCmd := NewGenerateCmd(generateService)
 	rootCmd := NewRoot()
 	rootCmd.AddCommand(generateCmd)
