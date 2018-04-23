@@ -38,6 +38,7 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 	for {
 		out, err := exec.Command("docker", "logs", container).Output()
 		output := string(out)
+		fmt.Println(output)
 		assert.NoError(t, err, output)
 
 		if strings.Contains(output, "listening on IPv4 address \"127.0.0.1\", port 5432") &&
