@@ -10,6 +10,7 @@ function echo_help() {
   echo "cover                         Code coverage"
   echo "test                          Run full test suite"
   echo "test:unit                     Run unit tests only"
+  echo "test:integration              Run integration tests only"
   echo "test:e2e                      Run e2e tests only"
 }
 
@@ -17,6 +18,9 @@ case "$1" in
   test)
     go test ./... -v -race
     ;;
+  test:integration)
+    go test ./... -v -race -run Integration
+  ;;
   test:unit)
     go test ./... -v -race -short
   ;;
