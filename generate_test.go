@@ -23,7 +23,7 @@ func TestNewGenerate(t *testing.T) {
 		cmd                *cobra.Command
 		cmdArgs            []string
 		expectedError      error
-		expectedCreateFile string
+		expectCreatedFiles []string
 		genFlags           *GenerateFlags
 	}{
 		{
@@ -34,10 +34,13 @@ func TestNewGenerate(t *testing.T) {
 					gen: "0001",
 				},
 			},
-			wantErr:            false,
-			cmd:                nil,
-			cmdArgs:            []string{"create_users_table"},
-			expectedCreateFile: filepath.Join("migrations", "V0001__create_users_table"),
+			wantErr: false,
+			cmd:     nil,
+			cmdArgs: []string{"create_users_table"},
+			expectCreatedFiles: []string{
+				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
+				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
+			},
 		},
 
 		{
@@ -48,11 +51,14 @@ func TestNewGenerate(t *testing.T) {
 					gen: "0001",
 				},
 			},
-			wantErr:            false,
-			cmd:                nil,
-			cmdArgs:            []string{"create_users_table"},
-			expectedCreateFile: filepath.Join("migrations", "V0001__create_users_table"),
-			genFlags:           &GenerateFlags{""},
+			wantErr: false,
+			cmd:     nil,
+			cmdArgs: []string{"create_users_table"},
+			expectCreatedFiles: []string{
+				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
+				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
+			},
+			genFlags: &GenerateFlags{""},
 		},
 
 		{
@@ -63,11 +69,27 @@ func TestNewGenerate(t *testing.T) {
 					gen: "0001",
 				},
 			},
-			wantErr:            false,
-			cmd:                nil,
-			cmdArgs:            []string{"create_users_table"},
-			expectedCreateFile: filepath.Join("new_migrations_dir", "V0001__create_users_table"),
-			genFlags:           &GenerateFlags{"new_migrations_dir"},
+			wantErr: false,
+			cmd:     nil,
+			cmdArgs: []string{"create_users_table"},
+			expectCreatedFiles: []string{
+				filepath.Join("new_migrations_dir", "V0001__create_users_table.up.sql"),
+				filepath.Join("new_migrations_dir", "V0001__create_users_table.down.sql"),
+			},
+			genFlags: &GenerateFlags{"new_migrations_dir"},
+		},
+
+		{
+			name: "No args",
+			services: svcs{
+				file:    &fileSvcMock{},
+				version: &versionSvcMock{"0001"},
+			},
+			wantErr:       true,
+			cmd:           nil,
+			cmdArgs:       []string{},
+			genFlags:      &GenerateFlags{"new_migrations_dir"},
+			expectedError: errors.New("must provide migration file name"),
 		},
 
 		{
@@ -79,10 +101,13 @@ func TestNewGenerate(t *testing.T) {
 				},
 				version: &versionSvcMock{"0002"},
 			},
-			wantErr:            false,
-			cmd:                nil,
-			cmdArgs:            []string{"create_users_table"},
-			expectedCreateFile: filepath.Join("migrations", "V0002__create_users_table"),
+			expectCreatedFiles: []string{
+				filepath.Join("migrations", "V0002__create_users_table.up.sql"),
+				filepath.Join("migrations", "V0002__create_users_table.down.sql"),
+			},
+			wantErr: false,
+			cmd:     nil,
+			cmdArgs: []string{"create_users_table"},
 		},
 
 		{
@@ -114,6 +139,24 @@ func TestNewGenerate(t *testing.T) {
 			cmdArgs:       []string{"create_users_table"},
 			expectedError: errors.New("some error"),
 		},
+
+		{
+			name: "Strip .sql if name already has the same postfix",
+			services: svcs{
+				file: &fileSvcMock{
+					mkdirErr:  nil,
+					createErr: nil,
+				},
+				version: &versionSvcMock{"0001"},
+			},
+			wantErr: false,
+			cmd:     nil,
+			cmdArgs: []string{"create_users_table.sql"},
+			expectCreatedFiles: []string{
+				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
+				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -124,8 +167,7 @@ func TestNewGenerate(t *testing.T) {
 				assert.Equal(t, err, tt.expectedError)
 			} else {
 				assert.NoError(t, err)
-				assert.Contains(t, tt.services.file.calledCreateArgs, tt.expectedCreateFile+".up.sql")
-				assert.Contains(t, tt.services.file.calledCreateArgs, tt.expectedCreateFile+".down.sql")
+				assert.Equal(t, tt.services.file.calledCreateArgs, tt.expectCreatedFiles)
 			}
 		})
 	}
