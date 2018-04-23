@@ -18,7 +18,12 @@ type GenerateFlags struct {
 	directory string
 }
 
-const DefaultMigrationsDirectory = "migrations"
+const (
+	DefaultMigrationsDirectory = "migrations"
+	SqlPostfix                 = ".sql"
+	UpFilePostfix              = ".up" + SqlPostfix
+	DownFilePostfix            = ".down" + SqlPostfix
+)
 
 func NewGenerate(file services.File, versionGen services.VersionGenerator) GenerateService {
 	return func(cmd *cobra.Command, args []string, genFlags *GenerateFlags) error {
@@ -26,30 +31,42 @@ func NewGenerate(file services.File, versionGen services.VersionGenerator) Gener
 			return errors.New("must provide migration file name")
 		}
 
-		migrationsDir := DefaultMigrationsDirectory
-		if genFlags != nil {
-			if strings.TrimSpace(genFlags.directory) != "" {
-				migrationsDir = genFlags.directory
-			}
-		}
-		err := file.Mkdir(migrationsDir)
-		if err != nil {
-			if !file.IsExist(err) {
-				return err
-			}
+		dir := migrationDir(genFlags)
+
+		if err := file.Mkdir(dir); err != nil && !file.IsExist(err) {
+			return err
 		}
 
-		fileName := fmt.Sprintf("V%s__%s", versionGen.Generate(), args[0])
-		path := filepath.Join(migrationsDir, fileName)
-		if strings.HasSuffix(path, ".sql") {
-			strIndex := strings.LastIndex(path, ".sql")
-			path = path[0:strIndex]
-		}
-		_, err = file.Create(path + ".up.sql")
+		path := fullFilePath(versionGen.Generate(), dir, args[0])
+
+		_, err := file.Create(path + UpFilePostfix)
 		if err != nil {
 			return err
 		}
-		_, err = file.Create(path + ".down.sql")
+		_, err = file.Create(path + DownFilePostfix)
 		return err
 	}
+}
+
+func fullFilePath(version, directory, fileName string) string {
+	strippedFileName := stripSqlPostfix(fileName)
+	fullFileName := fmt.Sprintf("V%s__%s", version, strippedFileName)
+	return filepath.Join(directory, fullFileName)
+}
+
+func stripSqlPostfix(path string) string {
+	newPath := path
+	if strings.HasSuffix(newPath, SqlPostfix) {
+		strIndex := strings.LastIndex(newPath, SqlPostfix)
+		newPath = newPath[0:strIndex]
+	}
+	return newPath
+}
+
+func migrationDir(genFlags *GenerateFlags) string {
+	migrationsDir := DefaultMigrationsDirectory
+	if genFlags != nil && strings.TrimSpace(genFlags.directory) != "" {
+		migrationsDir = genFlags.directory
+	}
+	return migrationsDir
 }
