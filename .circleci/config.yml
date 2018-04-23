@@ -14,21 +14,31 @@ jobs:
       - checkout
       - run: go get -v -t -d ./...
       - run: go build
-  test:
+  unit_test:
     working_directory: /go/src/github.com/raytung/g6
     docker:
       - image: circleci/golang:1.10
     steps:
       - checkout
-      - run: go test -v -cover -race -coverprofile=./coverage.out ./...
+      - run: go test -v -cover -race -coverprofile=./coverage.out ./... -short
       - run: go get -u github.com/mattn/goveralls
       - run: $(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=./coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+  e2e_test:
+      working_directory: /go/src/github.com/raytung/g6
+      docker:
+        - image: circleci/golang:1.10
+      steps:
+        - checkout
+        - run: ./start test:e2e
 
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
-      - test:
+      - unit_test:
           requires:
             - build
+      - e2e_test:
+          requires:
+            - unit_test
