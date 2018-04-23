@@ -1,0 +1,25 @@
+#! /bin/bash
+
+function echo_help() {
+  echo "./start script"
+  echo
+  echo "Usage:"
+  echo "  $ ./start <command>"
+  echo
+  echo "where <command> is:"
+  echo "cover                         Code coverage"
+}
+
+case "$1" in
+  cover)
+    go test -coverprofile cover.out ./...
+  	go tool cover -html=cover.out -o cover.html
+  	open cover.html
+  	sleep 1
+  	rm cover.html
+  	rm cover.out
+  ;;
+  *)
+    echo_help
+  ;;
+esac
