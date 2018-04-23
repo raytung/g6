@@ -8,9 +8,16 @@ function echo_help() {
   echo
   echo "where <command> is:"
   echo "cover                         Code coverage"
+  echo "test                          Run full test suite"
 }
 
 case "$1" in
+  test)
+    go test ./... -v -race
+    ;;
+  test:short)
+    go test ./... -v -race -short
+  ;;
   cover)
     go test -coverprofile cover.out ./...
   	go tool cover -html=cover.out -o cover.html

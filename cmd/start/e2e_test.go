@@ -11,6 +11,9 @@ import (
 const testBinary = "g6_test"
 
 func TestE2EG6(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
 	tmpDir := os.TempDir()
 	binaryPath := filepath.Join(tmpDir, testBinary)
 
