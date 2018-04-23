@@ -11,7 +11,7 @@ import (
 
 const testBinaryForGenerate = "g6_gen__test"
 
-func TestGenerate(t *testing.T) {
+func TestE2EGenerate(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}

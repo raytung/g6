@@ -10,7 +10,7 @@ import (
 
 const testBinary = "g6_test"
 
-func TestG6(t *testing.T) {
+func TestE2EG6(t *testing.T) {
 	tmpDir := os.TempDir()
 	binaryPath := filepath.Join(tmpDir, testBinary)
 
