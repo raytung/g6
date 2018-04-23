@@ -29,6 +29,7 @@ jobs:
       - image: circleci/golang:1.10
     steps:
       - checkout
+      - run: docker pull postgres:alpine
       - run: ./start test:integration
   e2e_test:
     working_directory: /go/src/github.com/raytung/g6
