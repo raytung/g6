@@ -24,6 +24,7 @@ func TestNewGenerate(t *testing.T) {
 		cmdArgs            []string
 		expectedError      error
 		expectedCreateFile string
+		genFlags           *GenerateFlags
 	}{
 		{
 			name: "happy path",
@@ -37,6 +38,36 @@ func TestNewGenerate(t *testing.T) {
 			cmd:                nil,
 			cmdArgs:            []string{"create_users_table"},
 			expectedCreateFile: filepath.Join("migrations", "V0001__create_users_table"),
+		},
+
+		{
+			name: "happy path (with directory flag but arg is empty)",
+			services: svcs{
+				file: &fileSvcMock{},
+				version: &versionSvcMock{
+					gen: "0001",
+				},
+			},
+			wantErr:            false,
+			cmd:                nil,
+			cmdArgs:            []string{"create_users_table"},
+			expectedCreateFile: filepath.Join("migrations", "V0001__create_users_table"),
+			genFlags:           &GenerateFlags{""},
+		},
+
+		{
+			name: "happy path (with directory flag)",
+			services: svcs{
+				file: &fileSvcMock{},
+				version: &versionSvcMock{
+					gen: "0001",
+				},
+			},
+			wantErr:            false,
+			cmd:                nil,
+			cmdArgs:            []string{"create_users_table"},
+			expectedCreateFile: filepath.Join("new_migrations_dir", "V0001__create_users_table"),
+			genFlags:           &GenerateFlags{"new_migrations_dir"},
 		},
 
 		{
@@ -87,7 +118,7 @@ func TestNewGenerate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gen := NewGenerate(tt.services.file, tt.services.version)
-			err := gen(tt.cmd, tt.cmdArgs)
+			err := gen(tt.cmd, tt.cmdArgs, tt.genFlags)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Equal(t, err, tt.expectedError)

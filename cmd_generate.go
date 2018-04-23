@@ -5,11 +5,15 @@ import (
 )
 
 func NewGenerateCmd(generateService GenerateService) *cobra.Command {
-	return &cobra.Command{
+	genFlags := GenerateFlags{}
+	cmd := &cobra.Command{
 		Use:   "generate",
 		Short: "create SQL migration files",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return generateService(cmd, args)
+			return generateService(cmd, args, &genFlags)
 		},
 	}
+
+	cmd.Flags().StringVarP(&genFlags.directory, "directory", "d", "", "custom directory to look for SQL files");
+	return cmd
 }

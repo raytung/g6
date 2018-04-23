@@ -16,7 +16,7 @@ func (f *file) Create(name string) (*os.File, error) {
 }
 
 func (f *file) Mkdir(name string) error {
-	return os.Mkdir(name, os.ModePerm)
+	return os.MkdirAll(name, os.ModePerm)
 }
 
 func (f *file) IsExist(err error) bool {
