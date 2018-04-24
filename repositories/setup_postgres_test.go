@@ -84,7 +84,7 @@ func waitForPostgres(connectionStr string) (*sql.DB, error) {
 		time.Sleep(waitTime)
 		timeout -= waitTime
 
-		if timeout == 0 {
+		if timeout <= 0 {
 			return nil, err
 		}
 
