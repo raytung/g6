@@ -24,10 +24,12 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 	defer tearDown()
 	assert.NoError(t, err, string(out))
 
-	conn := waitForPostgres(t, "postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
-	defer conn.Close()
+	db, err := sql.Open("postgres", "postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
+	assert.NoError(t, err)
 
-	pg := repositories.NewPostgresSetup(conn)
+	waitForPostgres(t, db)
+
+	pg := repositories.NewPostgresSetup(db)
 	type args struct {
 		tableName string
 	}
@@ -75,30 +77,24 @@ func startPostgres(container string, port string) ([]byte, error, func() ([]byte
 	return out, err, tearDown
 }
 
-func waitForPostgres(t *testing.T, connectionStr string) *sql.DB {
+func waitForPostgres(t *testing.T, db *sql.DB) {
 	t.Helper()
 	timeout := 30 * time.Second
+	elapsed := 0 * time.Second
 	waitTime := 500 * time.Millisecond
 
 	for {
-		conn, err := sql.Open("postgres", connectionStr)
 		time.Sleep(waitTime)
-		timeout -= waitTime
+		elapsed += waitTime
 
-		if timeout <= 0 {
-			conn.Close()
-			t.Fatalf("Cannot connect to postgres within timeout.\n Error: %+v\n", err)
+		if elapsed >= timeout {
+			t.Fatalf("Cannot connect to postgres after %v", timeout)
 		}
 
-		if err != nil {
+		if err := db.Ping(); err != nil {
 			continue
 		}
 
-		if err := conn.Ping(); err != nil {
-			conn.Close()
-			continue
-		}
-
-		return conn
+		break
 	}
 }
