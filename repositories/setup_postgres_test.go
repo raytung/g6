@@ -92,6 +92,7 @@ func waitForPostgres(t *testing.T, db *sql.DB) {
 		}
 
 		if err := db.Ping(); err != nil {
+			fmt.Printf("DB Ping error: %+v\n", err)
 			continue
 		}
 
