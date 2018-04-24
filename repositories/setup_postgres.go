@@ -25,6 +25,6 @@ func (pg *postgresSetup) CreateMigrationTable(tableName string) (sql.Result, err
 	return pg.db.Exec(createMigrationQuery(tableName))
 }
 
-func NewPostgresSetup() *postgresSetup {
-	return &postgresSetup{}
+func NewPostgresSetup(conn *sql.DB) *postgresSetup {
+	return &postgresSetup{conn}
 }

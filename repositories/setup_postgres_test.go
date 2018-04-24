@@ -1,14 +1,14 @@
-package repositories
+package repositories_test
 
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"database/sql"
 	"errors"
 	"fmt"
 	"os/exec"
-	"strings"
 	"time"
+	"database/sql"
+	"github.com/raytung/g6/repositories"
 )
 
 func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
@@ -18,39 +18,15 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 
 	container := "g6_itest_create_migration_table"
 
-	out, err := exec.Command("docker", "run",
-		"--rm",
-		"--name", container,
-		"--detach",
-		"--publish", "5432:5432",
-		"--env", "PGHOST=127.0.0.1",
-		"--env", "POSTGRES_USER=g6_test",
-		"--env", "POSTGRES_DB=g6_test",
-		"--env", "POSTGRES_PASSWORD=password",
-		"postgres:alpine",
-	).Output()
+	out, err, tearDown := startPostgres(container, "5435")
+	defer tearDown()
 	assert.NoError(t, err, string(out))
 
-	defer func(container string) {
-		out, err := exec.Command("docker", "stop", container).Output()
-		assert.NoError(t, err, string(out))
-	}(container)
-	for {
-		time.Sleep(500 * time.Millisecond)
-		out, err := exec.Command("docker", "logs", container, "--tail", "10").Output()
-		output := string(out)
-		fmt.Println(output)
-		assert.NoError(t, err, output)
+	conn, err := waitForPostgres("postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
+	assert.NoError(t, err, "Cannot connect to postgres within timeout")
+	defer conn.Close()
 
-		if strings.Contains(output, "PostgreSQL init process complete; ready for start up") {
-			time.Sleep(500 * time.Millisecond)
-			break
-		}
-	}
-
-	conn, err := sql.Open("postgres", "postgres://g6_test:password@127.0.0.1:5432/g6_test?sslmode=disable")
-	assert.NoError(t, err)
-	pg := &postgresSetup{conn}
+	pg := repositories.NewPostgresSetup(conn)
 	type args struct {
 		tableName string
 	}
@@ -77,4 +53,50 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 			assert.Equal(t, fmt.Sprintf("%v", tt.expectedError), fmt.Sprintf("%v", err))
 		})
 	}
+}
+
+func startPostgres(container string, port string) ([]byte, error, func() ([]byte, error)) {
+	out, err := exec.Command("docker", "run",
+		"--rm",
+		"--name", container,
+		"--detach",
+		"--publish", port+":5432",
+		"--env", "POSTGRES_USER=g6_test",
+		"--env", "POSTGRES_DB=g6_test",
+		"--env", "POSTGRES_PASSWORD=password",
+		"postgres:alpine",
+	).Output()
+
+	tearDown := func() ([]byte, error) {
+		return exec.Command("docker", "stop", container).Output()
+	}
+
+	return out, err, tearDown
+}
+
+func waitForPostgres(connectionStr string) (*sql.DB, error) {
+	var conn *sql.DB
+	var err error
+	timeout := 10 * time.Second
+	for {
+		if timeout == 0 {
+			return nil, err
+		}
+		waitTime := 500 * time.Millisecond
+		time.Sleep(waitTime)
+		timeout -= waitTime
+		conn, err = sql.Open("postgres", connectionStr)
+		if err != nil {
+			continue
+		}
+
+		if conn.Ping() != nil {
+			conn.Close()
+			continue
+		}
+
+		break;
+	}
+
+	return conn, err
 }
