@@ -87,7 +87,7 @@ func waitForPostgres(t *testing.T, connectionStr string) *sql.DB {
 
 		if timeout <= 0 {
 			conn.Close()
-			t.Fatalf("Cannot connect to postgres within timeout")
+			t.Fatalf("Cannot connect to postgres within timeout.\n Error: %+v\n", err)
 		}
 
 		if err != nil {
