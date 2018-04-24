@@ -28,15 +28,15 @@ case "$1" in
     go test ./... -v -race -run E2E
   ;;
   coverage)
-    go test ./... -v -covermode=count -coverprofile=coverage.out
+    go test -v -coverprofile a.cov ./repositories
+    go test -v -coverprofile b.cov
+    echo "mode: set" > coverage.out
+    grep -h -v "mode: set" *.cov >> coverage.out
+    rm *.cov
   ;;
   cover)
-    go test -coverprofile cover.out ./...
-  	go tool cover -html=cover.out -o cover.html
-  	open cover.html
-  	sleep 1
-  	rm cover.html
-  	rm cover.out
+    ./start coverage
+    go tool cover -html=coverage.out
   ;;
   *)
     echo_help

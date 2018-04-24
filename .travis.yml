@@ -15,4 +15,5 @@ before_install:
 script:
   - ./start test:unit
   - ./start coverage
+  - ./start test:e2e
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
