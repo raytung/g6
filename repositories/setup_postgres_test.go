@@ -23,6 +23,7 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 		"--name", container,
 		"--detach",
 		"--publish", "5432:5432",
+		"--env", "PGHOST=127.0.0.1",
 		"--env", "POSTGRES_USER=g6_test",
 		"--env", "POSTGRES_DB=g6_test",
 		"--env", "POSTGRES_PASSWORD=password",
@@ -42,9 +43,9 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 		assert.NoError(t, err, output)
 
 		if strings.Contains(output, "PostgreSQL init process complete; ready for start up") {
+			time.Sleep(500 * time.Millisecond)
 			break
 		}
-
 	}
 
 	conn, err := sql.Open("postgres", "postgres://g6_test:password@127.0.0.1:5432/g6_test?sslmode=disable")
