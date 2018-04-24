@@ -19,13 +19,12 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 
 	container := "g6_itest_create_migration_table"
 
-	out, err, tearDown := startPostgres(container, "5435")
+	dbPort := "5435"
+	out, err, tearDown := startPostgres(container, dbPort)
 	defer tearDown()
 	assert.NoError(t, err, string(out))
 
-	conn, err := waitForPostgres("postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
-	assert.NoError(t, err, "Cannot connect to postgres within timeout")
-	assert.NotNil(t, conn, "Cannot connect to postgres within timeout")
+	conn := waitForPostgres(t, "postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
 	defer conn.Close()
 
 	pg := repositories.NewPostgresSetup(conn)
@@ -76,7 +75,8 @@ func startPostgres(container string, port string) ([]byte, error, func() ([]byte
 	return out, err, tearDown
 }
 
-func waitForPostgres(connectionStr string) (*sql.DB, error) {
+func waitForPostgres(t *testing.T, connectionStr string) *sql.DB {
+	t.Helper()
 	timeout := 10 * time.Second
 	waitTime := 500 * time.Millisecond
 
@@ -87,18 +87,18 @@ func waitForPostgres(connectionStr string) (*sql.DB, error) {
 
 		if timeout <= 0 {
 			conn.Close()
-			return nil, err
+			t.Fatalf("Cannot connect to postgres within timeout")
 		}
 
 		if err != nil {
 			continue
 		}
 
-		if conn.Ping() != nil {
+		if err := conn.Ping(); err != nil {
 			conn.Close()
 			continue
 		}
 
-		return conn, err
+		return conn
 	}
 }
