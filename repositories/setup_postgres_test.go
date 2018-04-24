@@ -24,6 +24,7 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 
 	conn, err := waitForPostgres("postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
 	assert.NoError(t, err, "Cannot connect to postgres within timeout")
+	assert.NotNil(t, conn, "Cannot connect to postgres within timeout")
 	defer conn.Close()
 
 	pg := repositories.NewPostgresSetup(conn)
