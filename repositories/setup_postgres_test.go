@@ -34,19 +34,17 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 		out, err := exec.Command("docker", "stop", container).Output()
 		assert.NoError(t, err, string(out))
 	}(container)
-
 	for {
-		out, err := exec.Command("docker", "logs", container).Output()
+		time.Sleep(500 * time.Millisecond)
+		out, err := exec.Command("docker", "logs", container, "--tail", "10").Output()
 		output := string(out)
 		fmt.Println(output)
 		assert.NoError(t, err, output)
 
-		if strings.Contains(output, "listening on IPv4 address \"127.0.0.1\", port 5432") &&
-			strings.Contains(output, "database system is ready to accept connections") {
+		if strings.Contains(output, "PostgreSQL init process complete; ready for start up") {
 			break
 		}
 
-		time.Sleep(500 * time.Millisecond)
 	}
 
 	conn, err := sql.Open("postgres", "postgres://g6_test:password@127.0.0.1:5432/g6_test?sslmode=disable")
