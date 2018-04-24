@@ -24,7 +24,7 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 	defer tearDown()
 	assert.NoError(t, err, string(out))
 
-	db, err := sql.Open("postgres", "postgres://g6_test:password@127.0.0.1:5435/g6_test?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://g6_test:password@localhost:5435/g6_test?sslmode=disable")
 	assert.NoError(t, err)
 
 	waitForPostgres(t, db)
