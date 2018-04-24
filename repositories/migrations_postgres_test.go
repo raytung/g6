@@ -12,7 +12,7 @@ import (
 	"github.com/raytung/g6/repositories"
 )
 
-func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
+func Test_Integration_Migrations_Postgres_CreateTable(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}
@@ -29,7 +29,7 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 
 	waitForPostgres(t, db)
 
-	pg := repositories.NewPostgresSetup(db)
+	pg := repositories.NewPostgresMigrations(db)
 	type args struct {
 		tableName string
 	}
@@ -52,7 +52,7 @@ func Test_Integration_Setup_Postgres_CreateMigrationTable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := pg.CreateMigrationTable(tt.args.tableName)
+			_, err := pg.CreateTable(tt.args.tableName)
 			assert.Equal(t, fmt.Sprintf("%v", tt.expectedError), fmt.Sprintf("%v", err))
 		})
 	}

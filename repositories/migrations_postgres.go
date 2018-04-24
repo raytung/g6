@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-var _ Setup = &postgresSetup{}
+var _ Migrations = &pgMigrations{}
 
 func createMigrationQuery(table string) string {
 	return fmt.Sprintf(`
@@ -17,14 +17,14 @@ CREATE TABLE "%s" (
 );`, table);
 }
 
-type postgresSetup struct {
+type pgMigrations struct {
 	db *sql.DB
 }
 
-func (pg *postgresSetup) CreateMigrationTable(tableName string) (sql.Result, error) {
+func (pg *pgMigrations) CreateTable(tableName string) (sql.Result, error) {
 	return pg.db.Exec(createMigrationQuery(tableName))
 }
 
-func NewPostgresSetup(conn *sql.DB) *postgresSetup {
-	return &postgresSetup{conn}
+func NewPostgresMigrations(conn *sql.DB) *pgMigrations {
+	return &pgMigrations{conn}
 }
