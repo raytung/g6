@@ -76,17 +76,18 @@ func startPostgres(container string, port string) ([]byte, error, func() ([]byte
 }
 
 func waitForPostgres(connectionStr string) (*sql.DB, error) {
-	var conn *sql.DB
-	var err error
 	timeout := 10 * time.Second
+	waitTime := 500 * time.Millisecond
+
 	for {
+		conn, err := sql.Open("postgres", connectionStr)
+		time.Sleep(waitTime)
+		timeout -= waitTime
+
 		if timeout == 0 {
 			return nil, err
 		}
-		waitTime := 500 * time.Millisecond
-		time.Sleep(waitTime)
-		timeout -= waitTime
-		conn, err = sql.Open("postgres", connectionStr)
+
 		if err != nil {
 			continue
 		}
@@ -96,8 +97,6 @@ func waitForPostgres(connectionStr string) (*sql.DB, error) {
 			continue
 		}
 
-		break;
+		return conn, err
 	}
-
-	return conn, err
 }
