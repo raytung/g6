@@ -13,7 +13,7 @@ func TestNewSetup(t *testing.T) {
 	type args struct {
 		migrationsRepo *mockMigrationsRepository
 	}
-	tests := []struct {
+	type testCase struct {
 		name                          string
 		args                          args
 		cmd                           *cobra.Command
@@ -21,7 +21,8 @@ func TestNewSetup(t *testing.T) {
 		options                       *SetupOptions
 		cmdArgs                       []string
 		expectedCalledCreateTableWith []string
-	}{
+	}
+	tests := []testCase{
 		{
 			name: "creates migration table",
 			args: args{&mockMigrationsRepository{
@@ -33,15 +34,42 @@ func TestNewSetup(t *testing.T) {
 			cmdArgs:                       []string{},
 			expectedCalledCreateTableWith: []string{"g6_migrations"},
 		},
+
+		{
+			name: "creates migration table (with table options)",
+			args: args{&mockMigrationsRepository{
+				err:                   nil,
+				result:                &mockSQLResult{id: 1, rowsAffected: 1},
+				calledCreateTableArgs: []string{},
+			}},
+			options:                       &SetupOptions{"other_migrations_table"},
+			expectedError:                 nil,
+			cmdArgs:                       []string{},
+			expectedCalledCreateTableWith: []string{"other_migrations_table"},
+		},
+
+		{
+			name: "creates migration table with default table name if options table is empty",
+			args: args{&mockMigrationsRepository{
+				err:                   nil,
+				result:                &mockSQLResult{id: 1, rowsAffected: 1},
+				calledCreateTableArgs: []string{},
+			}},
+			options:                       &SetupOptions{""},
+			expectedError:                 nil,
+			cmdArgs:                       []string{},
+			expectedCalledCreateTableWith: []string{"g6_migrations"},
+		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		testCase := tt // copy to prevent racing
+		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			setup := NewSetup(tt.args.migrationsRepo)
-			err := setup(tt.cmd, tt.cmdArgs, tt.options)
-			assert.Equal(t, tt.expectedError, err)
-			assert.Equal(t, tt.expectedCalledCreateTableWith, tt.args.migrationsRepo.calledCreateTableArgs)
+			setup := NewSetup(testCase.args.migrationsRepo)
+			err := setup(testCase.cmd, testCase.cmdArgs, testCase.options)
+			assert.Equal(t, testCase.expectedError, err)
+			assert.Equal(t, testCase.expectedCalledCreateTableWith, testCase.args.migrationsRepo.calledCreateTableArgs)
 		})
 	}
 }
