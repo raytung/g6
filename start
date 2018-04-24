@@ -25,7 +25,7 @@ case "$1" in
     go test ./... -v -race -short
   ;;
   test:e2e)
-    go test ./... -v -race -run E2E
+    go test ./cmd/start/... -v
   ;;
   coverage)
     go test -v -coverprofile a.cov ./repositories
