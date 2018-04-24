@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"time"
 	"database/sql"
+	_ "github.com/lib/pq"
 	"github.com/raytung/g6/repositories"
 )
 
@@ -85,6 +86,7 @@ func waitForPostgres(connectionStr string) (*sql.DB, error) {
 		timeout -= waitTime
 
 		if timeout <= 0 {
+			conn.Close()
 			return nil, err
 		}
 
