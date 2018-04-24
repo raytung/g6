@@ -77,7 +77,7 @@ func startPostgres(container string, port string) ([]byte, error, func() ([]byte
 
 func waitForPostgres(t *testing.T, connectionStr string) *sql.DB {
 	t.Helper()
-	timeout := 10 * time.Second
+	timeout := 30 * time.Second
 	waitTime := 500 * time.Millisecond
 
 	for {
