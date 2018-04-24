@@ -27,6 +27,9 @@ case "$1" in
   test:e2e)
     go test ./... -v -race -run E2E
   ;;
+  coverage)
+    go test ./... -v -covermode=count -coverprofile=coverage.out
+  ;;
   cover)
     go test -coverprofile cover.out ./...
   	go tool cover -html=cover.out -o cover.html

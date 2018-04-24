@@ -13,6 +13,6 @@ before_install:
   - go get github.com/mattn/goveralls
 
 script:
-  - go test -v -race -short
-  - go test -v -covermode=count -coverprofile=coverage.out
+  - ./start test:unit
+  - ./start coverage
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
