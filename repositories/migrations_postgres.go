@@ -4,6 +4,7 @@ import (
 	_ "github.com/lib/pq"
 	"database/sql"
 	"fmt"
+	"github.com/lib/pq"
 )
 
 var _ Migrations = &pgMigrations{}
@@ -23,6 +24,22 @@ type pgMigrations struct {
 
 func (pg *pgMigrations) CreateTable(tableName string) (sql.Result, error) {
 	return pg.db.Exec(createMigrationQuery(tableName))
+}
+
+func (pg *pgMigrations) TableExists(table string) (bool, error) {
+	query := fmt.Sprintf(`
+SELECT *
+FROM "%s"
+LIMIT 1
+`, table)
+	_, err := pg.db.Query(query)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "undefined_table" {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func NewPostgresMigrations(conn *sql.DB) *pgMigrations {

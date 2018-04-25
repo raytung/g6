@@ -1,15 +1,16 @@
 package repositories_test
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
+	"database/sql"
 	"errors"
 	"fmt"
 	"os/exec"
+	"testing"
 	"time"
-	"database/sql"
+
 	_ "github.com/lib/pq"
 	"github.com/raytung/g6/repositories"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Integration_Migrations_Postgres_CreateTable(t *testing.T) {
@@ -92,10 +93,64 @@ func waitForPostgres(t *testing.T, db *sql.DB) {
 		}
 
 		if err := db.Ping(); err != nil {
-			fmt.Printf("DB Ping error: %+v\n", err)
+			if testing.Verbose() {
+				fmt.Printf("DB Ping error: %+v\n", err)
+			}
 			continue
 		}
 
 		break
+	}
+}
+
+func Test_Integration_Migrations_Postgres_TableExists(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	container := "g6_itest_migrations_table_exists"
+
+	dbPort := "5436"
+	out, err, tearDown := startPostgres(container, dbPort)
+	defer tearDown()
+	assert.NoError(t, err, string(out))
+
+	db, err := sql.Open("postgres", "postgres://g6_test:password@0.0.0.0:5436/g6_test?sslmode=disable")
+	assert.NoError(t, err)
+
+	waitForPostgres(t, db)
+
+	pg := repositories.NewPostgresMigrations(db)
+
+	_, err = pg.CreateTable("g6_migrations")
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name          string
+		table         string
+		exists        bool
+		expectedError error
+	}{
+		{
+			name:          "table exists",
+			table:         "g6_migrations",
+			exists:        true,
+			expectedError: nil,
+		},
+
+		{
+			name:          "table does not exist",
+			table:         "random_table",
+			exists:        false,
+			expectedError: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := pg.TableExists(tt.table)
+			assert.Equal(t, tt.expectedError, err)
+			assert.Equal(t, tt.exists, got)
+		})
 	}
 }

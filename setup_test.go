@@ -76,6 +76,9 @@ type mockMigrationsRepository struct {
 	result                sql.Result
 	err                   error
 	calledCreateTableArgs []string
+	calledTableExistsArgs []string
+	tableExist            bool
+	tableExistErr         error
 }
 
 var _ repositories.Migrations = &mockMigrationsRepository{}
@@ -83,6 +86,10 @@ var _ repositories.Migrations = &mockMigrationsRepository{}
 func (m *mockMigrationsRepository) CreateTable(tableName string) (sql.Result, error) {
 	m.calledCreateTableArgs = append(m.calledCreateTableArgs, tableName)
 	return m.result, m.err
+}
+
+func (m *mockMigrationsRepository) TableExists(tableName string) (bool, error) {
+	return m.tableExist, m.tableExistErr
 }
 
 type mockSQLResult struct {
