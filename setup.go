@@ -23,6 +23,9 @@ func NewSetup(migrations repositories.Migrations) SetupService {
 		if options != nil && options.table != "" {
 			table = options.table
 		}
+		if exists, err := migrations.TableExists(table); exists || err != nil {
+			return err
+		}
 		_, err := migrations.CreateTable(table)
 		return err
 	}

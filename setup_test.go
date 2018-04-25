@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/raytung/g6/repositories"
 	"database/sql"
+	"errors"
 )
 
 func TestNewSetup(t *testing.T) {
@@ -19,44 +20,58 @@ func TestNewSetup(t *testing.T) {
 		options                       *SetupOptions
 		cmdArgs                       []string
 		expectedCalledCreateTableWith []string
+		expectedCalledTableExistsWith []string
 	}
 	tests := []testCase{
 		{
 			name: "creates migration table",
 			args: args{&mockMigrationsRepository{
-				err:    nil,
 				result: &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
-			options:                       nil,
-			expectedError:                 nil,
-			cmdArgs:                       []string{},
 			expectedCalledCreateTableWith: []string{"g6_migrations"},
+			expectedCalledTableExistsWith: []string{"g6_migrations"},
 		},
 
 		{
 			name: "creates migration table (with table options)",
 			args: args{&mockMigrationsRepository{
-				err:                   nil,
-				result:                &mockSQLResult{id: 1, rowsAffected: 1},
-				calledCreateTableArgs: []string{},
+				result: &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
 			options:                       &SetupOptions{"other_migrations_table"},
-			expectedError:                 nil,
-			cmdArgs:                       []string{},
 			expectedCalledCreateTableWith: []string{"other_migrations_table"},
+			expectedCalledTableExistsWith: []string{"other_migrations_table"},
 		},
 
 		{
 			name: "creates migration table with default table name if options table is empty",
 			args: args{&mockMigrationsRepository{
-				err:                   nil,
-				result:                &mockSQLResult{id: 1, rowsAffected: 1},
-				calledCreateTableArgs: []string{},
+				result: &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
 			options:                       &SetupOptions{""},
-			expectedError:                 nil,
-			cmdArgs:                       []string{},
 			expectedCalledCreateTableWith: []string{"g6_migrations"},
+			expectedCalledTableExistsWith: []string{"g6_migrations"},
+		},
+
+		{
+			name: "does not attempt to create migration table if it already exists",
+			args: args{&mockMigrationsRepository{
+				tableExist: true,
+				result:     &mockSQLResult{id: 1, rowsAffected: 1},
+			}},
+			options:                       &SetupOptions{""},
+			expectedCalledTableExistsWith: []string{"g6_migrations"},
+		},
+
+		{
+			name: "does not attempt to create migration table TableExists errors out",
+			args: args{&mockMigrationsRepository{
+				tableExist:    true,
+				tableExistErr: errors.New("some table exist error"),
+				result:        &mockSQLResult{id: 1, rowsAffected: 1},
+			}},
+			options:                       &SetupOptions{""},
+			expectedError:                 errors.New("some table exist error"),
+			expectedCalledTableExistsWith: []string{"g6_migrations"},
 		},
 	}
 	for _, tt := range tests {
@@ -68,6 +83,7 @@ func TestNewSetup(t *testing.T) {
 			err := setup(testCase.cmdArgs, testCase.options)
 			assert.Equal(t, testCase.expectedError, err)
 			assert.Equal(t, testCase.expectedCalledCreateTableWith, testCase.args.migrationsRepo.calledCreateTableArgs)
+			assert.Equal(t, testCase.expectedCalledTableExistsWith, testCase.args.migrationsRepo.calledTableExistsArgs)
 		})
 	}
 }
@@ -89,6 +105,7 @@ func (m *mockMigrationsRepository) CreateTable(tableName string) (sql.Result, er
 }
 
 func (m *mockMigrationsRepository) TableExists(tableName string) (bool, error) {
+	m.calledTableExistsArgs = append(m.calledTableExistsArgs, tableName)
 	return m.tableExist, m.tableExistErr
 }
 
