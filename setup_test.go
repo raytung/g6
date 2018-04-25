@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/spf13/cobra"
 	"github.com/raytung/g6/repositories"
 	"database/sql"
 )
@@ -16,7 +15,6 @@ func TestNewSetup(t *testing.T) {
 	type testCase struct {
 		name                          string
 		args                          args
-		cmd                           *cobra.Command
 		expectedError                 error
 		options                       *SetupOptions
 		cmdArgs                       []string
@@ -67,7 +65,7 @@ func TestNewSetup(t *testing.T) {
 			t.Parallel()
 
 			setup := NewSetup(testCase.args.migrationsRepo)
-			err := setup(testCase.cmd, testCase.cmdArgs, testCase.options)
+			err := setup(testCase.cmdArgs, testCase.options)
 			assert.Equal(t, testCase.expectedError, err)
 			assert.Equal(t, testCase.expectedCalledCreateTableWith, testCase.args.migrationsRepo.calledCreateTableArgs)
 		})

@@ -1,12 +1,11 @@
 package g6
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/raytung/g6/repositories"
 )
 
 type CreateSetupService func(repositories.Migrations) SetupService
-type SetupService func(*cobra.Command, []string, *SetupOptions) error
+type SetupService func([]string, *SetupOptions) error
 
 var _ CreateSetupService = NewSetup
 
@@ -19,9 +18,9 @@ const (
 )
 
 func NewSetup(migrations repositories.Migrations) SetupService {
-	return func(cmd *cobra.Command, args []string, options *SetupOptions) error {
+	return func(args []string, options *SetupOptions) error {
 		table := DefaultMigrationsTable
-		if options != nil && options.table != ""{
+		if options != nil && options.table != "" {
 			table = options.table
 		}
 		_, err := migrations.CreateTable(table)
