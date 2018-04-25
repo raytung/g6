@@ -37,7 +37,7 @@ func TestNewSetup(t *testing.T) {
 			args: args{&mockMigrationsRepository{
 				result: &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
-			options:                       &SetupOptions{"other_migrations_table"},
+			options:                       &SetupOptions{table: "other_migrations_table"},
 			expectedCalledCreateTableWith: []string{"other_migrations_table"},
 			expectedCalledTableExistsWith: []string{"other_migrations_table"},
 		},
@@ -47,7 +47,7 @@ func TestNewSetup(t *testing.T) {
 			args: args{&mockMigrationsRepository{
 				result: &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
-			options:                       &SetupOptions{""},
+			options:                       &SetupOptions{table: ""},
 			expectedCalledCreateTableWith: []string{"g6_migrations"},
 			expectedCalledTableExistsWith: []string{"g6_migrations"},
 		},
@@ -58,7 +58,7 @@ func TestNewSetup(t *testing.T) {
 				tableExist: true,
 				result:     &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
-			options:                       &SetupOptions{""},
+			options:                       &SetupOptions{table: ""},
 			expectedCalledTableExistsWith: []string{"g6_migrations"},
 		},
 
@@ -69,7 +69,7 @@ func TestNewSetup(t *testing.T) {
 				tableExistErr: errors.New("some table exist error"),
 				result:        &mockSQLResult{id: 1, rowsAffected: 1},
 			}},
-			options:                       &SetupOptions{""},
+			options:                       &SetupOptions{table: ""},
 			expectedError:                 errors.New("some table exist error"),
 			expectedCalledTableExistsWith: []string{"g6_migrations"},
 		},

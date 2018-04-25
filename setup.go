@@ -10,7 +10,8 @@ type SetupService func([]string, *SetupOptions) error
 var _ CreateSetupService = NewSetup
 
 type SetupOptions struct {
-	table string
+	table        string
+	dbConnection string
 }
 
 const (
