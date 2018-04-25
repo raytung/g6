@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"github.com/stretchr/testify/assert"
-	"github.com/raytung/g6/pkg/tests"
 	"database/sql"
+	"github.com/raytung/g6/pkg/tests/docker"
 )
 
 const testBinary = "g6_test"
@@ -38,7 +38,7 @@ func TestE2EG6(t *testing.T) {
 		}
 	})
 
-	out, err, dockerStop := tests.DockerCli(&tests.DockerOptions{
+	out, err, dockerStop := docker.Cli(&docker.Options{
 		Command:       "run",
 		ContainerName: "test_e2e_g6",
 		Image:         "postgres:alpine",
@@ -55,7 +55,7 @@ func TestE2EG6(t *testing.T) {
 
 	db, err := sql.Open("postgres", "postgres://g6_test:password@0.0.0.0:5433/g6_test?sslmode=disable")
 
-	tests.WaitForDB(t, db)
+	docker.WaitForDB(t, db)
 
 	t.Run("setup", func(t *testing.T) {
 		output, err := exec.Command(binaryPath,

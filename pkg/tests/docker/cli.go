@@ -1,4 +1,4 @@
-package tests
+package docker
 
 import (
 	"os/exec"
@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-type DockerOptions struct {
+type Options struct {
 	Command       string
 	ContainerName string
 	Publish       string
@@ -19,7 +19,7 @@ type DockerOptions struct {
 
 type TearDown func() ([]byte, error)
 
-func DockerCli(options *DockerOptions) ([]byte, error, TearDown) {
+func Cli(options *Options) ([]byte, error, TearDown) {
 	args := []string{
 		options.Command,
 		"--rm",
