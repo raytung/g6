@@ -1,7 +1,6 @@
 package g6
 
 import (
-	"github.com/spf13/cobra"
 	"fmt"
 	"github.com/raytung/g6/services"
 	"path/filepath"
@@ -10,7 +9,7 @@ import (
 )
 
 type CreateGenerateService func(services.File, services.VersionGenerator) GenerateService
-type GenerateService func(*cobra.Command, []string, *GenerateFlags) error
+type GenerateService func([]string, *GenerateFlags) error
 
 var _ CreateGenerateService = NewGenerate
 
@@ -26,7 +25,7 @@ const (
 )
 
 func NewGenerate(file services.File, versionGen services.VersionGenerator) GenerateService {
-	return func(cmd *cobra.Command, args []string, genFlags *GenerateFlags) error {
+	return func(args []string, genFlags *GenerateFlags) error {
 		if len(args) == 0 {
 			return errors.New("must provide migration file name")
 		}

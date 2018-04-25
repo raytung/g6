@@ -3,7 +3,6 @@ package g6
 import (
 	"testing"
 
-	"github.com/spf13/cobra"
 	"os"
 	"github.com/stretchr/testify/assert"
 	"errors"
@@ -20,7 +19,6 @@ func TestNewGenerate(t *testing.T) {
 		services           svcs
 		wantErr            bool
 		want               GenerateService
-		cmd                *cobra.Command
 		cmdArgs            []string
 		expectedError      error
 		expectCreatedFiles []string
@@ -35,7 +33,6 @@ func TestNewGenerate(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			cmd:     nil,
 			cmdArgs: []string{"create_users_table"},
 			expectCreatedFiles: []string{
 				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
@@ -52,7 +49,6 @@ func TestNewGenerate(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			cmd:     nil,
 			cmdArgs: []string{"create_users_table"},
 			expectCreatedFiles: []string{
 				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
@@ -70,7 +66,6 @@ func TestNewGenerate(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			cmd:     nil,
 			cmdArgs: []string{"create_users_table"},
 			expectCreatedFiles: []string{
 				filepath.Join("new_migrations_dir", "V0001__create_users_table.up.sql"),
@@ -86,7 +81,6 @@ func TestNewGenerate(t *testing.T) {
 				version: &versionSvcMock{"0001"},
 			},
 			wantErr:       true,
-			cmd:           nil,
 			cmdArgs:       []string{},
 			genFlags:      &GenerateFlags{"new_migrations_dir"},
 			expectedError: errors.New("must provide migration file name"),
@@ -106,7 +100,6 @@ func TestNewGenerate(t *testing.T) {
 				filepath.Join("migrations", "V0002__create_users_table.down.sql"),
 			},
 			wantErr: false,
-			cmd:     nil,
 			cmdArgs: []string{"create_users_table"},
 		},
 
@@ -120,7 +113,6 @@ func TestNewGenerate(t *testing.T) {
 				version: &versionSvcMock{},
 			},
 			wantErr:       true,
-			cmd:           nil,
 			cmdArgs:       []string{"create_users_table"},
 			expectedError: errors.New("some error"),
 		},
@@ -135,7 +127,6 @@ func TestNewGenerate(t *testing.T) {
 				version: &versionSvcMock{},
 			},
 			wantErr:       true,
-			cmd:           nil,
 			cmdArgs:       []string{"create_users_table"},
 			expectedError: errors.New("some error"),
 		},
@@ -150,7 +141,6 @@ func TestNewGenerate(t *testing.T) {
 				version: &versionSvcMock{"0001"},
 			},
 			wantErr: false,
-			cmd:     nil,
 			cmdArgs: []string{"create_users_table.sql"},
 			expectCreatedFiles: []string{
 				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
@@ -158,10 +148,12 @@ func TestNewGenerate(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
+	for _, testCase := range tests {
+		tt := testCase
 		t.Run(tt.name, func(t *testing.T) {
-			gen := NewGenerate(tt.services.file, tt.services.version)
-			err := gen(tt.cmd, tt.cmdArgs, tt.genFlags)
+			t.Parallel()
+			generate := NewGenerate(tt.services.file, tt.services.version)
+			err := generate(tt.cmdArgs, tt.genFlags)
 			if tt.wantErr {
 				assert.Error(t, err)
 				assert.Equal(t, err, tt.expectedError)
