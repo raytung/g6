@@ -156,15 +156,17 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 	assert.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		migration     *repositories.Migration
-		expectedError error
-		expectedTable string
+		name                      string
+		migration                 *repositories.Migration
+		expectError               bool
+		expectedTable             string
+		expectedInMigrationsTable bool
 	}{
 		{
-			name:          "run migrations",
-			expectedError: nil,
-			expectedTable: "users",
+			name:                      "run migrations",
+			expectError:               false,
+			expectedTable:             "users",
+			expectedInMigrationsTable: true,
 			migration: &repositories.Migration{
 				Name: "V1234__create_users_table",
 				Query: strings.Join([]string{
@@ -175,12 +177,23 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 				}, "\n"),
 			},
 		},
+
+		{
+			name:                      "does not insert into migrations table if migration fails",
+			expectError:               true,
+			expectedInMigrationsTable: false,
+			expectedTable:             "users",
+			migration: &repositories.Migration{
+				Name:  "V1234__create_posts_table",
+				Query: "some invalid queries here",
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := pg.Run(tt.migration)
-			assert.Equal(t, tt.expectedError, err)
+			err := pg.Run(tt.migration)
+			assert.True(t, tt.expectError != (err == nil))
 			rows, err := db.Query("SELECT COUNT(*) FROM " + tt.expectedTable)
 			assert.NoError(t, err)
 			assert.True(t, rows.Next())
@@ -192,7 +205,12 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 			assert.NoError(t, err)
 			assert.True(t, migrationsTableRows.Next())
 			assert.NoError(t, migrationsTableRows.Scan(&migrationsTableCount))
-			assert.Equal(t, 1, migrationsTableCount)
+
+			if tt.expectedInMigrationsTable {
+				assert.Equal(t, 1, migrationsTableCount)
+			} else {
+				assert.Equal(t, 0, migrationsTableCount)
+			}
 		})
 	}
 }

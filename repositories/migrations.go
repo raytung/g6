@@ -12,7 +12,7 @@ type Options struct {
 }
 
 type MigrationsRunner interface {
-	Run(migration *Migration) (sql.Result, error)
+	Run(migration *Migration) error
 }
 
 type Migrations interface {

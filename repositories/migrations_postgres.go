@@ -44,9 +44,26 @@ LIMIT 1
 	return true, nil
 }
 
-func (pg *pgMigrations) Run(migration *Migration) (sql.Result, error) {
-	pg.db.Exec(migration.Query)
-	return pg.db.Exec(fmt.Sprintf("INSERT INTO \"%s\" (name, migrated_at) VALUES ($1, $2)", pg.table), migration.Name, time.Now())
+func (pg *pgMigrations) Run(migration *Migration) error {
+	tx, err := pg.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(migration.Query)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(fmt.Sprintf("INSERT INTO \"%s\" (name, migrated_at) VALUES ($1, $2)", pg.table), migration.Name, time.Now())
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func NewPostgresMigrations(conn *sql.DB, table string) *pgMigrations {
