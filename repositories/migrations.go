@@ -7,6 +7,10 @@ type Migration struct {
 	Query string
 }
 
+type Options struct {
+	table string
+}
+
 type MigrationsRunner interface {
 	Run(migration *Migration) (sql.Result, error)
 }
