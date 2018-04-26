@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/lib/pq"
+	"time"
 )
 
 var _ Migrations = &pgMigrations{}
@@ -19,7 +20,8 @@ CREATE TABLE "%s" (
 }
 
 type pgMigrations struct {
-	db *sql.DB
+	db    *sql.DB
+	table string
 }
 
 func (pg *pgMigrations) CreateTable(tableName string) (sql.Result, error) {
@@ -43,9 +45,10 @@ LIMIT 1
 }
 
 func (pg *pgMigrations) Run(migration *Migration) (sql.Result, error) {
-	return pg.db.Exec(migration.Query)
+	pg.db.Exec(migration.Query)
+	return pg.db.Exec(fmt.Sprintf("INSERT INTO \"%s\" (name, migrated_at) VALUES ($1, $2)", pg.table), migration.Name, time.Now())
 }
 
-func NewPostgresMigrations(conn *sql.DB) *pgMigrations {
-	return &pgMigrations{conn}
+func NewPostgresMigrations(conn *sql.DB, table string) *pgMigrations {
+	return &pgMigrations{conn, table}
 }

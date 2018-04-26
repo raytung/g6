@@ -17,13 +17,13 @@ func NewSetupCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			migrationsRepo := repositories.NewPostgresMigrations(db)
+			migrationsRepo := repositories.NewPostgresMigrations(db, &options.table)
 			setupService := NewSetup(migrationsRepo)
 			return setupService(args, &options)
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.table, "table", "t", "", "g6 migrations table");
+	cmd.Flags().StringVarP(&options.table, "table", "t", DefaultMigrationsTable, "g6 migrations table");
 	cmd.Flags().StringVarP(&options.dbConnection, "connection", "c", "", "connection string");
 	return cmd
 }

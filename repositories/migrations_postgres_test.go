@@ -36,7 +36,7 @@ func Test_Integration_Migrations_Postgres_CreateTable(t *testing.T) {
 
 	docker.WaitForDB(t, db)
 
-	pg := repositories.NewPostgresMigrations(db)
+	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
 	type args struct {
 		tableName string
 	}
@@ -90,7 +90,7 @@ func Test_Integration_Migrations_Postgres_TableExists(t *testing.T) {
 
 	docker.WaitForDB(t, db)
 
-	pg := repositories.NewPostgresMigrations(db)
+	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
 
 	_, err = pg.CreateTable("g6_migrations")
 	assert.NoError(t, err)
@@ -150,7 +150,7 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 
 	docker.WaitForDB(t, db)
 
-	pg := repositories.NewPostgresMigrations(db)
+	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
 
 	_, err = pg.CreateTable("g6_migrations")
 	assert.NoError(t, err)
@@ -187,11 +187,12 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 			var count int
 			assert.NoError(t, rows.Scan(&count))
 			assert.Equal(t, 0, count)
-			//migrationsTableRows, err := db.Query("SELECT COUNT(*) FROM g6_migrations WHERE name = ?", tt.migration.Name)
-			//var migrationsTableCount int
-			//assert.True(t, migrationsTableRows.Next())
-			//assert.NoError(t, migrationsTableRows.Scan(&migrationsTableCount))
-			//assert.Equal(t, 1, migrationsTableCount)
+			migrationsTableRows, err := db.Query("SELECT COUNT(*) FROM g6_migrations WHERE name = $1", tt.migration.Name)
+			var migrationsTableCount int
+			assert.NoError(t, err)
+			assert.True(t, migrationsTableRows.Next())
+			assert.NoError(t, migrationsTableRows.Scan(&migrationsTableCount))
+			assert.Equal(t, 1, migrationsTableCount)
 		})
 	}
 }
