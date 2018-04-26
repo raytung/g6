@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"time"
+	"errors"
 )
 
 var _ Migrations = &pgMigrations{}
@@ -42,6 +43,29 @@ LIMIT 1
 		return false, err
 	}
 	return true, nil
+}
+
+func (pg *pgMigrations) Latest() (*MigrationQueryResult, error) {
+	q := fmt.Sprintf(`
+SELECT *
+FROM "%s"
+ORDER BY id DESC
+LIMIT 1
+`, pg.table)
+	sqlResult, err := pg.db.Query(q)
+	if pqErr, ok := err.(*pq.Error); ok {
+		return nil, errors.New(pqErr.Code.Name())
+	}
+
+	var migrationResult MigrationQueryResult
+	if sqlResult.Next() {
+		if err := sqlResult.Scan(&migrationResult.ID, &migrationResult.Name, &migrationResult.MigratedAt); err != nil {
+			return nil, err
+		}
+		migrationResult.HasResults = true
+	}
+
+	return &migrationResult, nil
 }
 
 func (pg *pgMigrations) Run(migration *Migration) error {

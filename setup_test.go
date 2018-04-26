@@ -109,6 +109,10 @@ func (m *mockMigrationsRepository) TableExists(tableName string) (bool, error) {
 	return m.tableExist, m.tableExistErr
 }
 
+func (m *mockMigrationsRepository) Latest() (*repositories.MigrationQueryResult, error) {
+	return nil, nil
+}
+
 type mockSQLResult struct {
 	id              int64
 	rowsAffected    int64

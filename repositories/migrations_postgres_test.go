@@ -214,3 +214,72 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 		})
 	}
 }
+
+func Test_Integration_Migrations_Postgres_Latest(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	out, err, tearDown := docker.Cli(&docker.Options{
+		Command:       "run",
+		ContainerName: "g6_itest_migrations_latest",
+		Image:         "postgres:alpine",
+		Publish:       "5438:5432",
+		Env: map[string]string{
+			"POSTGRES_USER":     "g6_test",
+			"POSTGRES_DB":       "g6_test",
+			"POSTGRES_PASSWORD": "password",
+		},
+	})
+
+	defer tearDown()
+	assert.NoError(t, err, string(out))
+
+	db, err := sql.Open("postgres", "postgres://g6_test:password@0.0.0.0:5438/g6_test?sslmode=disable")
+	assert.NoError(t, err)
+
+	docker.WaitForDB(t, db)
+
+	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
+
+	migration, err := pg.Latest()
+	assert.Nil(t, migration)
+	assert.EqualError(t, err, "undefined_table")
+
+	_, err = pg.CreateTable("g6_migrations")
+	assert.NoError(t, err)
+
+	migration, err = pg.Latest()
+	assert.NoError(t, err)
+	assert.NotNil(t, migration)
+	assert.False(t, migration.HasResults)
+
+	err = pg.Run(&repositories.Migration{
+		Name: "V1234__create_users_table",
+		Query: strings.Join([]string{
+			"CREATE TABLE users (",
+			"	id SERIAL PRIMARY KEY,",
+			"	email VARCHAR UNIQUE NOT NULL",
+			");",
+		}, "\n"),
+	})
+	assert.NoError(t, err)
+
+	err = pg.Run(&repositories.Migration{
+		Name: "V1235__create_posts_table",
+		Query: strings.Join([]string{
+			"CREATE TABLE posts (",
+			"	id SERIAL PRIMARY KEY,",
+			"	user_id INTEGER REFERENCES users",
+			");",
+		}, "\n"),
+	})
+	assert.NoError(t, err)
+
+	migration, err = pg.Latest()
+	assert.NoError(t, err)
+	assert.NotNil(t, migration)
+	assert.True(t, migration.HasResults)
+	assert.Equal(t, migration.Name, "V1235__create_posts_table")
+	assert.Equal(t, migration.ID, 2)
+}
