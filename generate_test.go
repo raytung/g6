@@ -22,7 +22,7 @@ func TestNewGenerate(t *testing.T) {
 		cmdArgs            []string
 		expectedError      error
 		expectCreatedFiles []string
-		genFlags           *GenerateFlags
+		genFlags           *GenerateOptions
 	}{
 		{
 			name: "happy path",
@@ -54,7 +54,7 @@ func TestNewGenerate(t *testing.T) {
 				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
 				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
 			},
-			genFlags: &GenerateFlags{""},
+			genFlags: &GenerateOptions{""},
 		},
 
 		{
@@ -71,7 +71,7 @@ func TestNewGenerate(t *testing.T) {
 				filepath.Join("new_migrations_dir", "V0001__create_users_table.up.sql"),
 				filepath.Join("new_migrations_dir", "V0001__create_users_table.down.sql"),
 			},
-			genFlags: &GenerateFlags{"new_migrations_dir"},
+			genFlags: &GenerateOptions{"new_migrations_dir"},
 		},
 
 		{
@@ -82,7 +82,7 @@ func TestNewGenerate(t *testing.T) {
 			},
 			wantErr:       true,
 			cmdArgs:       []string{},
-			genFlags:      &GenerateFlags{"new_migrations_dir"},
+			genFlags:      &GenerateOptions{"new_migrations_dir"},
 			expectedError: errors.New("must provide migration file name"),
 		},
 

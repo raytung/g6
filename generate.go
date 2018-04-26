@@ -9,11 +9,11 @@ import (
 )
 
 type CreateGenerateService func(services.File, services.VersionGenerator) GenerateService
-type GenerateService func([]string, *GenerateFlags) error
+type GenerateService func([]string, *GenerateOptions) error
 
 var _ CreateGenerateService = NewGenerate
 
-type GenerateFlags struct {
+type GenerateOptions struct {
 	directory string
 }
 
@@ -25,12 +25,12 @@ const (
 )
 
 func NewGenerate(file services.File, versionGen services.VersionGenerator) GenerateService {
-	return func(args []string, genFlags *GenerateFlags) error {
+	return func(args []string, options *GenerateOptions) error {
 		if len(args) == 0 {
 			return errors.New("must provide migration file name")
 		}
 
-		dir := migrationDir(genFlags)
+		dir := migrationDir(options)
 
 		if err := file.Mkdir(dir); err != nil && !file.IsExist(err) {
 			return err
@@ -62,7 +62,7 @@ func stripSqlPostfix(path string) string {
 	return newPath
 }
 
-func migrationDir(genFlags *GenerateFlags) string {
+func migrationDir(genFlags *GenerateOptions) string {
 	migrationsDir := DefaultMigrationsDirectory
 	if genFlags != nil && strings.TrimSpace(genFlags.directory) != "" {
 		migrationsDir = genFlags.directory
