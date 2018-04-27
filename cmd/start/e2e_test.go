@@ -38,7 +38,7 @@ func TestE2EG6(t *testing.T) {
 		}
 	})
 
-	out, err, _ := docker.Cli(&docker.Options{
+	out, err, dockerStop := docker.Cli(&docker.Options{
 		Command:       "run",
 		ContainerName: "test_e2e_g6",
 		Image:         "postgres:alpine",
@@ -50,7 +50,7 @@ func TestE2EG6(t *testing.T) {
 		},
 	})
 
-	//defer dockerStop()
+	defer dockerStop()
 	assert.NoError(t, err, string(out))
 
 	db, err := sql.Open("postgres", "postgres://g6_test:password@0.0.0.0:5433/g6_test?sslmode=disable")
