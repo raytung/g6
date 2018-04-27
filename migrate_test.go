@@ -4,6 +4,7 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/raytung/g6/repositories"
+	"errors"
 	"time"
 	"path/filepath"
 )
@@ -88,6 +89,15 @@ func TestNewMigrate(t *testing.T) {
 			options:                    &MigrateOptions{"some_directory"},
 			expectedCalledGlobWithArgs: []string{filepath.Join("some_directory", "*.up.sql")},
 			expectedCallIsDirWithArgs:  []string{"some_directory"},
+		},
+
+		{
+			name:           "path is not a directory",
+			expectedErr:    errors.New("not a directory"),
+			fileReader:     &mockFileReader{isDir: false},
+			options:        &MigrateOptions{"some directory"},
+			migrationsRepo: &mockMigrationsRepo{},
+			filePathReader: &mockFilePathReader{},
 		},
 	}
 	for _, testCase := range tests {

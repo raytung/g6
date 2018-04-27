@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"errors"
 )
 
 type CreateMigrateService func(MigrationsRepository, filePathReader, fileReader) MigrateService
@@ -33,7 +34,9 @@ type fileReader interface {
 
 func NewMigrate(migrations MigrationsRepository, filePathReader filePathReader, fileReader fileReader) MigrateService {
 	return func(args []string, options *MigrateOptions) error {
-		fileReader.IsDir(options.directory)
+		if isDir, _ := fileReader.IsDir(options.directory); !isDir {
+			return errors.New("not a directory")
+		}
 		upFiles, _ := filePathReader.Glob(filepath.Join(options.directory, "*.up.sql"))
 
 		sort.Sort(sort.StringSlice(upFiles))
