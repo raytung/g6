@@ -35,8 +35,8 @@ func TestNewGenerate(t *testing.T) {
 			wantErr: false,
 			cmdArgs: []string{"create_users_table"},
 			expectCreatedFiles: []string{
-				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
-				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
+				filepath.Join("migrationsRepo", "V0001__create_users_table.up.sql"),
+				filepath.Join("migrationsRepo", "V0001__create_users_table.down.sql"),
 			},
 		},
 
@@ -51,8 +51,8 @@ func TestNewGenerate(t *testing.T) {
 			wantErr: false,
 			cmdArgs: []string{"create_users_table"},
 			expectCreatedFiles: []string{
-				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
-				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
+				filepath.Join("migrationsRepo", "V0001__create_users_table.up.sql"),
+				filepath.Join("migrationsRepo", "V0001__create_users_table.down.sql"),
 			},
 			genFlags: &GenerateOptions{""},
 		},
@@ -96,8 +96,8 @@ func TestNewGenerate(t *testing.T) {
 				version: &versionSvcMock{"0002"},
 			},
 			expectCreatedFiles: []string{
-				filepath.Join("migrations", "V0002__create_users_table.up.sql"),
-				filepath.Join("migrations", "V0002__create_users_table.down.sql"),
+				filepath.Join("migrationsRepo", "V0002__create_users_table.up.sql"),
+				filepath.Join("migrationsRepo", "V0002__create_users_table.down.sql"),
 			},
 			wantErr: false,
 			cmdArgs: []string{"create_users_table"},
@@ -143,8 +143,8 @@ func TestNewGenerate(t *testing.T) {
 			wantErr: false,
 			cmdArgs: []string{"create_users_table.sql"},
 			expectCreatedFiles: []string{
-				filepath.Join("migrations", "V0001__create_users_table.up.sql"),
-				filepath.Join("migrations", "V0001__create_users_table.down.sql"),
+				filepath.Join("migrationsRepo", "V0001__create_users_table.up.sql"),
+				filepath.Join("migrationsRepo", "V0001__create_users_table.down.sql"),
 			},
 		},
 	}

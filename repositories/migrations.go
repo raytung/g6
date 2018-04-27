@@ -26,13 +26,13 @@ type MigrationsRunner interface {
 }
 
 type MigrationsLatestInfo interface {
-	Latest() (*Migration, error)
+	Latest() (*MigrationQueryResult, error)
+	TableExists() (bool, error)
 }
 
 type Migrations interface {
 	CreateTable(table string) (sql.Result, error)
 	TableExists(table string) (bool, error)
-	Latest() (*MigrationQueryResult, error)
 }
 
 var _ Migrations = &pgMigrations{}

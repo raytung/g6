@@ -19,7 +19,7 @@ func NewSetupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "setup",
 		Example: `  g6 setup --table g6_migrations --connection "postgres://<username>:<password>@<host>:<port>/<db name>"`,
-		Short:   "Setup database to keep track of migrations status",
+		Short:   "Setup database to keep track of migrationsRepo status",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			db, err := sql.Open("postgres", cmd.Flag(ConnectionStringFlag).Value.String())
 			if err != nil {
@@ -31,7 +31,7 @@ func NewSetupCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(TableFlag, TableShortFlag, DefaultMigrationsTable, "g6 migrations table")
+	cmd.Flags().StringP(TableFlag, TableShortFlag, DefaultMigrationsTable, "g6 migrationsRepo table")
 	cmd.Flags().StringP(ConnectionStringFlag, ConnectionStringShortFlag, "", "connection string")
 	return cmd
 }

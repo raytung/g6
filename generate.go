@@ -18,7 +18,7 @@ type GenerateOptions struct {
 }
 
 const (
-	DefaultMigrationsDirectory = "migrations"
+	DefaultMigrationsDirectory = "migrationsRepo"
 	SqlPostfix                 = ".sql"
 	UpFilePostfix              = ".up" + SqlPostfix
 	DownFilePostfix            = ".down" + SqlPostfix
