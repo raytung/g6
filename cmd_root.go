@@ -22,10 +22,13 @@ func Execute() {
 	timeService := services.NewTimeService()
 	generateService := NewGenerate(fileService, timeService)
 	generateCmd := NewGenerateCmd(generateService)
+
+	migrateCmd := NewMigrateCmd()
 	setupCmd := NewSetupCmd()
 	rootCmd := NewRoot()
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(setupCmd)
+	rootCmd.AddCommand(migrateCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

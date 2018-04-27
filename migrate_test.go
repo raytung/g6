@@ -4,9 +4,9 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/raytung/g6/repositories"
-	"errors"
-	"time"
 	"path/filepath"
+	"time"
+	"errors"
 )
 
 func TestNewMigrate(t *testing.T) {
@@ -47,6 +47,38 @@ func TestNewMigrate(t *testing.T) {
 			options:                    &MigrateOptions{"some_directory"},
 			expectedCallIsDirWithArgs:  []string{"some_directory"},
 			expectedCalledGlobWithArgs: []string{filepath.Join("some_directory", "*.up.sql")},
+		},
+
+		{
+			name:        "No previous migrations",
+			expectedErr: nil,
+			migrationsRepo: &mockMigrationsRepo{
+				latestMigration: &repositories.MigrationQueryResult{
+					HasResults: false,
+				},
+				tableExist: true,
+			},
+			fileReader: &mockFileReader{
+				readFileResponses: [][]byte{
+					[]byte("CREATE TABLE users ();"),
+				},
+				readFileErrs: []error{nil, nil},
+				isDir:        true,
+			},
+			filePathReader: &mockFilePathReader{
+				files: []string{
+					"V1234_create_users_table.up.sql",
+				},
+			},
+			expectedCalledRunWithArgs: []*repositories.Migration{
+				{Name: "V1234_create_users_table", Query: "CREATE TABLE users ();"},
+			},
+			expectedCalledReadFileWithArgs: []string{
+				"V1234_create_users_table.up.sql",
+			},
+			options:                    &MigrateOptions{"some_directory"},
+			expectedCalledGlobWithArgs: []string{filepath.Join("some_directory", "*.up.sql")},
+			expectedCallIsDirWithArgs:  []string{"some_directory"},
 		},
 
 		{

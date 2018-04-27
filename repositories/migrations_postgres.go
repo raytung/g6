@@ -25,16 +25,16 @@ type pgMigrations struct {
 	table string
 }
 
-func (pg *pgMigrations) CreateTable(tableName string) (sql.Result, error) {
-	return pg.db.Exec(createMigrationQuery(tableName))
+func (pg *pgMigrations) CreateTable() (sql.Result, error) {
+	return pg.db.Exec(createMigrationQuery(pg.table))
 }
 
-func (pg *pgMigrations) TableExists(table string) (bool, error) {
+func (pg *pgMigrations) TableExists() (bool, error) {
 	query := fmt.Sprintf(`
 SELECT *
 FROM "%s"
 LIMIT 1
-`, table)
+`, pg.table)
 	_, err := pg.db.Query(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "undefined_table" {

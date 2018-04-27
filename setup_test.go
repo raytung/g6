@@ -99,13 +99,13 @@ type mockMigrationsRepository struct {
 
 var _ repositories.Migrations = &mockMigrationsRepository{}
 
-func (m *mockMigrationsRepository) CreateTable(tableName string) (sql.Result, error) {
-	m.calledCreateTableArgs = append(m.calledCreateTableArgs, tableName)
+func (m *mockMigrationsRepository) CreateTable() (sql.Result, error) {
+	//m.calledCreateTableArgs = append(m.calledCreateTableArgs, tableName)
 	return m.result, m.err
 }
 
-func (m *mockMigrationsRepository) TableExists(tableName string) (bool, error) {
-	m.calledTableExistsArgs = append(m.calledTableExistsArgs, tableName)
+func (m *mockMigrationsRepository) TableExists() (bool, error) {
+	//m.calledTableExistsArgs = append(m.calledTableExistsArgs, tableName)
 	return m.tableExist, m.tableExistErr
 }
 

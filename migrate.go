@@ -63,11 +63,14 @@ func NewMigrate(migrations MigrationsRepository, filePathReader filePathReader, 
 			}
 		}
 
-		if len(upFiles)-1 == latestMigrationIndex {
+		if latest.HasResults && len(upFiles)-1 == latestMigrationIndex {
 			return nil
 		}
 
 		pendingMigrations := upFiles[latestMigrationIndex+1:]
+		if !latest.HasResults {
+			pendingMigrations = upFiles
+		}
 
 		for _, fileName := range pendingMigrations {
 			name := fileName[:len(fileName)-len(".up.sql")]

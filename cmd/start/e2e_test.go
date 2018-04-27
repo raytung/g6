@@ -38,7 +38,7 @@ func TestE2EG6(t *testing.T) {
 		}
 	})
 
-	out, err, dockerStop := docker.Cli(&docker.Options{
+	out, err, _ := docker.Cli(&docker.Options{
 		Command:       "run",
 		ContainerName: "test_e2e_g6",
 		Image:         "postgres:alpine",
@@ -50,7 +50,7 @@ func TestE2EG6(t *testing.T) {
 		},
 	})
 
-	defer dockerStop()
+	//defer dockerStop()
 	assert.NoError(t, err, string(out))
 
 	db, err := sql.Open("postgres", "postgres://g6_test:password@0.0.0.0:5433/g6_test?sslmode=disable")
@@ -67,6 +67,29 @@ func TestE2EG6(t *testing.T) {
 
 		expectedOutput := ""
 		assert.Equal(t, expectedOutput, string(output))
+	})
+
+	t.Run("migrate", func(t *testing.T) {
+		output, err := exec.Command(binaryPath,
+			"migrate",
+			"--directory", "samples",
+			"--table", "g6_migrations",
+			"--connection", "postgres://g6_test:password@0.0.0.0:5433/g6_test?sslmode=disable",
+		).Output()
+
+		if assert.NoError(t, err) {
+			expectedOutput := ""
+			assert.Equal(t, expectedOutput, string(output))
+		}
+
+		_, err = db.Query("SELECT * FROM users LIMIT 1")
+		assert.NoError(t, err)
+
+		results, err := db.Query("SELECT * FROM g6_migrations WHERE name = $1", "V1524861198888__create_users_table")
+		assert.NoError(t, err)
+
+		assert.True(t, results.Next())
+
 	})
 }
 

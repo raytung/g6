@@ -36,30 +36,30 @@ func Test_Integration_Migrations_Postgres_CreateTable(t *testing.T) {
 
 	docker.WaitForDB(t, db)
 
-	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
 	type args struct {
 		tableName string
 	}
 	tests := []struct {
 		name          string
-		args          args
+		tableName     string
 		expectedError error
 	}{
 		{
 			name:          "creates migration table",
-			args:          args{"g6_migrations"},
+			tableName:     "g6_migrations",
 			expectedError: nil,
 		},
 
 		{
 			name:          "does not create migration table if already exist",
-			args:          args{"g6_migrations"},
+			tableName:     "g6_migrations",
 			expectedError: errors.New("pq: relation \"g6_migrations\" already exists"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := pg.CreateTable(tt.args.tableName)
+			pg := repositories.NewPostgresMigrations(db, tt.tableName)
+			_, err := pg.CreateTable()
 			assert.Equal(t, fmt.Sprintf("%v", tt.expectedError), fmt.Sprintf("%v", err))
 		})
 	}
@@ -92,7 +92,7 @@ func Test_Integration_Migrations_Postgres_TableExists(t *testing.T) {
 
 	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
 
-	_, err = pg.CreateTable("g6_migrations")
+	_, err = pg.CreateTable()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -118,7 +118,8 @@ func Test_Integration_Migrations_Postgres_TableExists(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := pg.TableExists(tt.table)
+			pg := repositories.NewPostgresMigrations(db, tt.table)
+			got, err := pg.TableExists()
 			assert.Equal(t, tt.expectedError, err)
 			assert.Equal(t, tt.exists, got)
 		})
@@ -152,7 +153,7 @@ func Test_Integration_Migrations_Postgres_Run(t *testing.T) {
 
 	pg := repositories.NewPostgresMigrations(db, "g6_migrations")
 
-	_, err = pg.CreateTable("g6_migrations")
+	_, err = pg.CreateTable()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -246,7 +247,7 @@ func Test_Integration_Migrations_Postgres_Latest(t *testing.T) {
 	assert.Nil(t, migration)
 	assert.EqualError(t, err, "undefined_table")
 
-	_, err = pg.CreateTable("g6_migrations")
+	_, err = pg.CreateTable()
 	assert.NoError(t, err)
 
 	migration, err = pg.Latest()

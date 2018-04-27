@@ -31,8 +31,10 @@ type MigrationsLatestInfo interface {
 }
 
 type Migrations interface {
-	CreateTable(table string) (sql.Result, error)
-	TableExists(table string) (bool, error)
+	CreateTable() (sql.Result, error)
+	TableExists() (bool, error)
 }
 
 var _ Migrations = &pgMigrations{}
+var _ MigrationsRunner = &pgMigrations{}
+var _ MigrationsLatestInfo = &pgMigrations{}

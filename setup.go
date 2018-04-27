@@ -20,14 +20,14 @@ const (
 
 func NewSetup(migrations repositories.Migrations) SetupService {
 	return func(args []string, options *SetupOptions) error {
-		table := DefaultMigrationsTable
-		if options != nil && options.table != "" {
-			table = options.table
-		}
-		if exists, err := migrations.TableExists(table); exists || err != nil {
+		//table := DefaultMigrationsTable
+		//if options != nil && options.table != "" {
+		//	table = options.table
+		//}
+		if exists, err := migrations.TableExists(); exists || err != nil {
 			return err
 		}
-		_, err := migrations.CreateTable(table)
+		_, err := migrations.CreateTable()
 		return err
 	}
 }
