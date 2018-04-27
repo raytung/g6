@@ -158,6 +158,40 @@ func TestNewMigrate(t *testing.T) {
 				},
 			},
 		},
+
+		{
+			name:        "error running migrations",
+			expectedErr: errors.New("some migration error"),
+			fileReader: &mockFileReader{
+				isDir:        true,
+				readFileErrs: []error{nil},
+				readFileResponses: [][]byte{
+					[]byte("CREATE TABLE posts ();"),
+				},
+			},
+			options: &MigrateOptions{"some_directory"},
+			migrationsRepo: &mockMigrationsRepo{
+				latestMigration: &repositories.MigrationQueryResult{
+					HasResults: true,
+					ID:         1,
+					Name:       "V1234_create_users_table",
+					MigratedAt: time.Now(),
+				},
+				runErr:     errors.New("some migration error"),
+				tableExist: true,
+			},
+			expectedCalledGlobWithArgs:     []string{filepath.Join("some_directory", "*.up.sql")},
+			expectedCalledReadFileWithArgs: []string{"V1235_create_posts_table.up.sql"},
+			expectedCalledRunWithArgs: []*repositories.Migration{
+				{Name: "V1235_create_posts_table", Query: "CREATE TABLE posts ();"},
+			},
+			filePathReader: &mockFilePathReader{
+				files: []string{
+					"V1234_create_users_table.up.sql",
+					"V1235_create_posts_table.up.sql",
+				},
+			},
+		},
 	}
 	for _, testCase := range tests {
 		tt := testCase

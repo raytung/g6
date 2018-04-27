@@ -77,10 +77,14 @@ func NewMigrate(migrations MigrationsRepository, filePathReader filePathReader, 
 				return err
 			}
 
-			migrations.Run(&repositories.Migration{
+			err = migrations.Run(&repositories.Migration{
 				Name:  name,
 				Query: string(content),
 			})
+
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	}
