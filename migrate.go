@@ -34,14 +34,26 @@ type fileReader interface {
 
 func NewMigrate(migrations MigrationsRepository, filePathReader filePathReader, fileReader fileReader) MigrateService {
 	return func(args []string, options *MigrateOptions) error {
-		if isDir, _ := fileReader.IsDir(options.directory); !isDir {
+		isDir, err := fileReader.IsDir(options.directory)
+		if err != nil {
+			return err
+		}
+		if !isDir {
 			return errors.New("not a directory")
 		}
-		upFiles, _ := filePathReader.Glob(filepath.Join(options.directory, "*.up.sql"))
+		upFiles, err := filePathReader.Glob(filepath.Join(options.directory, "*.up.sql"))
+
+		if err != nil {
+			return err
+		}
 
 		sort.Sort(sort.StringSlice(upFiles))
 
-		latest, _ := migrations.Latest()
+		latest, err := migrations.Latest()
+
+		if err != nil {
+			return err
+		}
 
 		var latestMigrationIndex int
 
@@ -51,18 +63,24 @@ func NewMigrate(migrations MigrationsRepository, filePathReader filePathReader, 
 			}
 		}
 
-		if len(upFiles) == latestMigrationIndex {
+		if len(upFiles)-1 == latestMigrationIndex {
 			return nil
 		}
 
 		pendingMigrations := upFiles[latestMigrationIndex+1:]
 
 		for _, fileName := range pendingMigrations {
-			name := fileName[:len(fileName) - len(".up.sql")]
-			m := repositories.Migration{Name: name}
-			content, _ := fileReader.ReadFile(fileName)
-			m.Query = string(content)
-			migrations.Run(&m)
+			name := fileName[:len(fileName)-len(".up.sql")]
+			content, err := fileReader.ReadFile(fileName)
+
+			if err != nil {
+				return err
+			}
+
+			migrations.Run(&repositories.Migration{
+				Name:  name,
+				Query: string(content),
+			})
 		}
 		return nil
 	}

@@ -99,6 +99,65 @@ func TestNewMigrate(t *testing.T) {
 			migrationsRepo: &mockMigrationsRepo{},
 			filePathReader: &mockFilePathReader{},
 		},
+
+		{
+			name:           "error calling IsDir",
+			expectedErr:    errors.New("some fs error"),
+			fileReader:     &mockFileReader{isDirErr: errors.New("some fs error")},
+			options:        &MigrateOptions{"some_directory"},
+			migrationsRepo: &mockMigrationsRepo{},
+			filePathReader: &mockFilePathReader{},
+		},
+
+		{
+			name:                       "error calling Glob",
+			expectedErr:                errors.New("some glob error"),
+			fileReader:                 &mockFileReader{isDir: true},
+			options:                    &MigrateOptions{"some_directory"},
+			migrationsRepo:             &mockMigrationsRepo{},
+			expectedCalledGlobWithArgs: []string{filepath.Join("some_directory", "*.up.sql")},
+			filePathReader:             &mockFilePathReader{err: errors.New("some glob error")},
+		},
+
+		{
+			name:                       "error getting latest migration",
+			expectedErr:                errors.New("some db error"),
+			fileReader:                 &mockFileReader{isDir: true},
+			options:                    &MigrateOptions{"some_directory"},
+			migrationsRepo:             &mockMigrationsRepo{latestErr: errors.New("some db error")},
+			expectedCalledGlobWithArgs: []string{filepath.Join("some_directory", "*.up.sql")},
+			filePathReader:             &mockFilePathReader{},
+		},
+
+		{
+			name:        "error reading file",
+			expectedErr: errors.New("some read file error"),
+			fileReader: &mockFileReader{
+				isDir:        true,
+				readFileErrs: []error{errors.New("some read file error")},
+				readFileResponses: [][]byte{
+					[]byte("CREATE TABLE posts ();"),
+				},
+			},
+			options: &MigrateOptions{"some_directory"},
+			migrationsRepo: &mockMigrationsRepo{
+				latestMigration: &repositories.MigrationQueryResult{
+					HasResults: true,
+					ID:         1,
+					Name:       "V1234_create_users_table",
+					MigratedAt: time.Now(),
+				},
+				tableExist: true,
+			},
+			expectedCalledGlobWithArgs:     []string{filepath.Join("some_directory", "*.up.sql")},
+			expectedCalledReadFileWithArgs: []string{"V1235_create_posts_table.up.sql"},
+			filePathReader: &mockFilePathReader{
+				files: []string{
+					"V1234_create_users_table.up.sql",
+					"V1235_create_posts_table.up.sql",
+				},
+			},
+		},
 	}
 	for _, testCase := range tests {
 		tt := testCase
